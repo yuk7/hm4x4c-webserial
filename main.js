@@ -18,6 +18,14 @@ async function onClickConnect() {
     }
 }
 
+async function onClickDisconnect() {
+    try {
+        await port.close();
+    } catch (error) {
+        alert('Error: ' + error);
+    }
+}
+
 async function sendChCommand(inputCh, outputCh) {
     if (inputCh >= inputChCnt || outputCh >= outputChCnt) {
         alert('Invalid channel number');
