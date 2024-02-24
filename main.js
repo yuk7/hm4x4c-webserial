@@ -26,14 +26,42 @@ async function onClickDisconnect() {
     }
 }
 
+async function sendChUpDownCommand(outputCh, isUp) {
+    if (outputCh < 0 || outputCh >= outputChCnt) {
+        alert('Invalid channel number');
+        return;
+    }
+
+    let startLocation = Math.floor(outputCh * (inputChCnt + 4)) - 3;
+    var commandLocation = startLocation;
+    if (isUp) {
+        commandLocation = startLocation + 1;
+    }
+
+    if (commandLocation < 0) {
+        commandLocation = outputChCnt * (inputChCnt + 4) + commandLocation;
+    }
+
+    let commandStr = 'cir ' + ('0' + (Number(commandLocation).toString(16))).slice(-2) + '\r\n';
+
+    try {
+        const encoder = new TextEncoder();
+        const writer = port.writable.getWriter();
+        await writer.write(encoder.encode(commandStr));
+        writer.releaseLock();
+    } catch (error) {
+        alert('Error: ' + error);
+    }
+}
+
 async function sendChCommand(inputCh, outputCh) {
-    if (inputCh >= inputChCnt || outputCh >= outputChCnt) {
+    if (inputCh < 0 || inputCh >= inputChCnt || outputCh < 0 || outputCh >= outputChCnt) {
         alert('Invalid channel number');
         return;
     }
     let startLocation = Math.floor(outputCh * (inputChCnt + 4));
-    let commandInt = startLocation + inputCh;
-    let commandStr = 'cir ' + ('0' + (Number(commandInt).toString(16))).slice(-2) + '\r\n';
+    let commandLocation = startLocation + inputCh;
+    let commandStr = 'cir ' + ('0' + (Number(commandLocation).toString(16))).slice(-2) + '\r\n';
 
     try {
         const encoder = new TextEncoder();
@@ -60,6 +88,13 @@ window.addEventListener('load', function () {
         th.textContent = i + 1;
         inputLabelsTr.appendChild(th);
     }
+    let upLabel = document.createElement('th');
+    upLabel.textContent = '+';
+    inputLabelsTr.appendChild(upLabel);
+    let downLabel = document.createElement('th');
+    downLabel.textContent = '-';
+    inputLabelsTr.appendChild(downLabel);
+
     tbody.appendChild(inputLabelsTr);
 
     let outputLabelsTr = document.createElement('tr');
@@ -87,6 +122,31 @@ window.addEventListener('load', function () {
             th.appendChild(button);
             tr.appendChild(th);
         }
+
+        let upButton = document.createElement('th');
+        let upButtonEl = document.createElement('input');
+        upButtonEl.type = 'button';
+        upButtonEl.value = '+';
+        upButtonEl.onclick = (function (_outCount) {
+            return function () {
+                sendChUpDownCommand(_outCount, true);
+            };
+        })(outCount);
+        upButton.appendChild(upButtonEl);
+        tr.appendChild(upButton);
+
+        let downButton = document.createElement('th');
+        let downButtonEl = document.createElement('input');
+        downButtonEl.type = 'button';
+        downButtonEl.value = '-';
+        downButtonEl.onclick = (function (_outCount) {
+            return function () {
+                sendChUpDownCommand(_outCount, false);
+            };
+        })(outCount);
+        downButton.appendChild(downButtonEl);
+        tr.appendChild(downButton);
+
         tbody.appendChild(tr);
     }
 
