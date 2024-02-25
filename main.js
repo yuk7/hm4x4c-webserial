@@ -1,6 +1,6 @@
 let port;
-let inputChCnt = 4;
-let outputChCnt = 4;
+const inputChCnt = 4;
+const outputChCnt = 4;
 
 async function onClickConnect() {
     try {
@@ -26,23 +26,24 @@ async function onClickDisconnect() {
     }
 }
 
+function calculateCommandStartLocation(outputCh) {
+    return outputCh * (inputChCnt + 4);
+}
+
 async function sendChUpDownCommand(outputCh, isUp) {
     if (outputCh < 0 || outputCh >= outputChCnt) {
         alert('Invalid channel number');
         return;
     }
 
-    let startLocation = Math.floor(outputCh * (inputChCnt + 4)) - 3;
-    var commandLocation = startLocation;
-    if (isUp) {
-        commandLocation = startLocation + 1;
-    }
+    let startLocation = calculateCommandStartLocation(outputCh) - 3;
+    let commandLocation = startLocation + (isUp ? 1 : 0);
 
     if (commandLocation < 0) {
-        commandLocation = outputChCnt * (inputChCnt + 4) + commandLocation;
+        commandLocation += calculateCommandStartLocation(outputChCnt);
     }
 
-    let commandStr = 'cir ' + ('0' + (Number(commandLocation).toString(16))).slice(-2) + '\r\n';
+    let commandStr = `cir ${('0' + (Number(commandLocation).toString(16))).slice(-2)}\r\n`
 
     try {
         const encoder = new TextEncoder();
@@ -59,9 +60,8 @@ async function sendChCommand(inputCh, outputCh) {
         alert('Invalid channel number');
         return;
     }
-    let startLocation = Math.floor(outputCh * (inputChCnt + 4));
-    let commandLocation = startLocation + inputCh;
-    let commandStr = 'cir ' + ('0' + (Number(commandLocation).toString(16))).slice(-2) + '\r\n';
+    let commandLocation = calculateCommandStartLocation(outputCh) + inputCh;
+    let commandStr = `cir ${('0' + (Number(commandLocation).toString(16))).slice(-2)}\r\n`
 
     try {
         const encoder = new TextEncoder();
